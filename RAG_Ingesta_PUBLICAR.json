@@ -1,0 +1,485 @@
+{
+  "name": "RAG - Ingesta Base de Conocimiento",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3fac3667-2f69-46cf-9d29-7365d780af66",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "REEMPLAZAR_ID_GOOGLE_SHEETS",
+          "mode": "list",
+          "cachedResultName": "Base de Informacion Especifica"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "c3b9f1c8-22b4-45da-a4d2-a030579d0042",
+      "name": "trae Id, Categoria, Informacion",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c0d9d2b7-6756-493d-9d4b-b88a1df5c447",
+              "leftValue": "={{ $('trae Id, Categoria, Informacion').item.json.UUID_Qdrant }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        656,
+        -16
+      ],
+      "id": "4f9abe0a-f303-402b-84c7-d79e74c70735",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "REEMPLAZAR_ID_GOOGLE_SHEETS",
+          "mode": "list",
+          "cachedResultName": "Base de Informacion Especifica"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "UUID_Qdrant": "={{ $json.UUID_Qdrant }}",
+            "Id": "={{ $('trae Id, Categoria, Informacion').item.json.Id }}"
+          },
+          "matchingColumns": [
+            "Id"
+          ],
+          "schema": [
+            {
+              "id": "Id",
+              "displayName": "Id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Categoria",
+              "displayName": "Categoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Informacion",
+              "displayName": "Informacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "UUID_Qdrant",
+              "displayName": "UUID_Qdrant",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1040,
+        -176
+      ],
+      "id": "d5b47adf-71c9-42dd-a43a-3deea0a7a612",
+      "name": "Update row in sheet"
+    },
+    {
+      "parameters": {
+        "jsCode": "// obtener el array de values\nconst vector = $input.first().json.embedding.values;\n\n// contar sus elementos\nconst dimension = vector.length;\n\nreturn [\n  {\n    json: {\n     dimension\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        -208
+      ],
+      "id": "f67e5e7a-b113-44f6-8a08-157259cb1b4d",
+      "name": "dimencion de vectores"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        960,
+        96
+      ],
+      "id": "5db7012a-cfb8-4f4a-93c0-58c9cdf83bcc",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e34ededc-f4b3-499f-8139-bcdaf9bad1b2",
+              "name": "row_number",
+              "value": "={{ $('genera UUID y conserva datos').item.json.row_number }}",
+              "type": "string"
+            },
+            {
+              "id": "8b1e78fa-096e-4ba1-9181-0ff8e93b926d",
+              "name": "=Id",
+              "value": "={{ $('genera UUID y conserva datos').item.json.Id }}",
+              "type": "string"
+            },
+            {
+              "id": "077215b8-d74f-4140-a53e-fb5ca2414b31",
+              "name": "Categoria",
+              "value": "={{ $('genera UUID y conserva datos').item.json.Categoria }}",
+              "type": "string"
+            },
+            {
+              "id": "92e528da-20fc-4d5e-9853-659ff035e118",
+              "name": "Informacion",
+              "value": "={{ $('genera UUID y conserva datos').item.json.Informacion }}",
+              "type": "string"
+            },
+            {
+              "id": "1cb08062-1596-4edd-a000-068df1102394",
+              "name": "UUID_Qdrant",
+              "value": "={{ $('genera UUID y conserva datos').item.json.UUID_Qdrant }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1264,
+        -176
+      ],
+      "id": "7f76c258-1560-488d-8cf2-d69b60618195",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "action": "generate",
+        "dataPropertyName": "UUID_Qdrant"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        832,
+        -176
+      ],
+      "id": "b4fc6c95-3f6e-4825-a0d6-2e6e92de4f19",
+      "name": "genera UUID y conserva datos"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "70b0099a-08a4-4f60-af3f-bbc9d8ea94c6",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:embedContent",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-goog-api-key",
+              "value": "REEMPLAZAR_CON_CREDENCIAL_SEGURA"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"models/gemini-embedding-2\",\n  \"content\": {\n    \"parts\": [{\n      \"text\": \" Categoria: {{ $json.Categoria }}  Informacion: {{ $json.Informacion }}\"\n    }]\n  }\n}  ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1168,
+        96
+      ],
+      "id": "202f680b-3373-405b-8e91-80d77ca79da7",
+      "name": "Gemini Embedding: genera embedding.values"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "https://TU_CLUSTER_QDRANT.cloud.qdrant.io/collections/colitas_base_conocimiento/points",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            },
+            {
+              "name": "api-key",
+              "value": "REEMPLAZAR_CON_CREDENCIAL_SEGURA"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    points: [\n      {\n        id: $('Merge').item.json.UUID_Qdrant,\n        vector: $json.embedding.values,\n        payload: {\n          Id:$('Merge').item.json.Id ,\n          Categoria:$('Merge').item.json.Categoria,\n          Informacion:$('Merge').item.json.Informacion\n        }\n      }\n    ]\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1376,
+        96
+      ],
+      "id": "7180d75f-dec0-4968-ba13-d8f7216c4283",
+      "name": "Qdrant: almacena/actualiza el conocimiento"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        656,
+        176
+      ],
+      "id": "5449fd28-45fb-4700-b94e-fe117f1522c0",
+      "name": "Wait"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "trae Id, Categoria, Informacion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "trae Id, Categoria, Informacion": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "genera UUID y conserva datos",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "dimencion de vectores": {
+      "main": [
+        []
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "genera UUID y conserva datos": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Gemini Embedding: genera embedding.values",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Embedding: genera embedding.values": {
+      "main": [
+        [
+          {
+            "node": "Qdrant: almacena/actualiza el conocimiento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant: almacena/actualiza el conocimiento": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "074a1081-2228-4de1-a218-4c7481c4e06c",
+  "nodeGroups": [],
+  "tags": []
+}

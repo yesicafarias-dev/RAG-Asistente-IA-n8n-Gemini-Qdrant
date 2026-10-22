@@ -1,0 +1,381 @@
+{
+  "name": "RAG - Retrieval Base de Conocimiento",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "957457ff-d7bc-4c5c-b39c-53829ac78057",
+              "name": "Nombre",
+              "value": "Carolina",
+              "type": "string"
+            },
+            {
+              "id": "9ba855c1-9f60-46d1-914e-ddf73aa65da8",
+              "name": "Consulta",
+              "value": "Hola ¿ Como puedo lavar mi amigurumi?",
+              "type": "string"
+            },
+            {
+              "id": "b1b8f683-e1e4-4cc7-aa51-d713ff85a432",
+              "name": "Correo electronico",
+              "value": "cliente.ejemplo@example.com",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        256,
+        0
+      ],
+      "id": "e9339a7b-4aaf-426b-a418-edabd21914f7",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:embedContent",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-goog-api-key",
+              "value": "REEMPLAZAR_CON_CREDENCIAL_SEGURA"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"models/gemini-embedding-2\",\n  \"content\": {\n    \"parts\": [{\n      \"text\": \"{{ $json.Consulta }}\"\n    }]\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        464,
+        0
+      ],
+      "id": "76b7ac96-f83d-427d-9f4a-034d5dc7df92",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        32,
+        0
+      ],
+      "id": "31aae87c-9ceb-486c-bc7a-a479d77ac7a7",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://TU_CLUSTER_QDRANT.cloud.qdrant.io/collections/colitas_base_conocimiento/points/query",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            },
+            {
+              "name": "api-key",
+              "value": "REEMPLAZAR_CON_CREDENCIAL_SEGURA"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": [{{ $json.embedding.values }}],\n  \"limit\": 1,\n  \"with_payload\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        672,
+        0
+      ],
+      "id": "a289b163-5682-4a40-8df6-6d1097e8910a",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=REEMPLAZAR_API_KEY_GEMINI",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-goog-api-key",
+              "value": "REEMPLAZAR_CON_CREDENCIAL_SEGURA"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    contents: [\n      {\n        parts: [\n          {\n            text: $json.Prompt\n          }\n        ]\n      }\n    ]\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1376,
+        0
+      ],
+      "id": "50a14dac-b340-4d11-a7d1-bc2951ec298d",
+      "name": "Gemini genera respuesta"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9f45f472-926a-4da5-b2a2-5aec91d42355",
+              "name": "Nombre",
+              "value": "={{ $('Edit Fields').item.json.Nombre }}",
+              "type": "string"
+            },
+            {
+              "id": "4308fddb-8b8a-4df0-8695-ba939a610518",
+              "name": "Consulta",
+              "value": "={{ $('Edit Fields').item.json.Consulta }}",
+              "type": "string"
+            },
+            {
+              "id": "f93d860b-ee98-4f11-a1c8-52f452ae85b0",
+              "name": "Categoria",
+              "value": "={{ $json.result.points[0].payload.Categoria }}",
+              "type": "string"
+            },
+            {
+              "id": "734fa419-2714-46ba-9ce7-ecfb5416f2fc",
+              "name": "Informacion",
+              "value": "={{ $json.result.points[0].payload.Informacion }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        880,
+        0
+      ],
+      "id": "cac26ebb-4b71-4d56-bd76-5c0c800b89a6",
+      "name": "datos recuperados"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b0045b7b-263a-45d6-ab78-53c67a18be97",
+              "name": "Prompt",
+              "value": "=Eres un asistente de atención al cliente amable, claro y profesional. Responde a la consulta del usuario usando únicamente la información proporcionada.\n\nREGLAS:\n1. Responde de forma sencilla, empática y directa.\n2. Utiliza ÚNICAMENTE los datos proporcionados. Queda estrictamente prohibido inventar o agregar información externa.\n3. Si la información dada es suficiente para resolver la duda del cliente:\n   - Responde la consulta de manera amable.\n   - Asigna el estado: AUTOMATICO.\n4. Si la información NO es suficiente:\n   - Responde amablemente indicando que un asesor humano se comunicará a la brevedad para brindarle asistencia.\n   - Asigna el estado: REVISION.\n\nFORMATO DE SALIDA:\nDebes devolver la respuesta con estructura JSON:\n\n{\n  \"respuesta\": \"\",\n  \"estado\": \"AUTOMATICO o REVISION\"\n}\n\nDATOS DEL CLIENTE:\nNombre: {{ $json.Nombre }}\nConsulta: {{ $json.Consulta }}\n\nCONTEXTO RECUPERADO:\nCategoría: {{ $json.Categoria }}\nInformación: {{ $json.Informacion }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1120,
+        0
+      ],
+      "id": "142d13b3-14ee-4f18-94cc-8174a948d73d",
+      "name": "preparar prompt"
+    },
+    {
+      "parameters": {
+        "jsCode": "const texto = $input.first().json.candidates[0].content.parts[0].text\n\nconst limpio = texto\n  .replace(\"```json\", \"\")\n  .replace(\"```\", \"\")\n  .trim();\n\nconst data = JSON.parse(limpio);\nreturn [\n  {\n    json: {\n      Nombre: $('datos recuperados').first().json.Nombre,\n      Consulta: $('datos recuperados').first().json.Consulta,\n      respuesta: data.respuesta,\n      estado: data.estado\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        0
+      ],
+      "id": "106579cd-6928-4386-a4d9-3a94e7885a6f",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c2b02933-eb32-4c5e-8aa7-5daa278d87e6",
+              "leftValue": "={{ $json.estado }}",
+              "rightValue": "=AUTOMATICO",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1824,
+        0
+      ],
+      "id": "42c963d0-d448-4b16-9a6a-25e1d21d7783",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        624,
+        144
+      ],
+      "id": "f3c959ea-b2ea-4190-a347-fd8e0f754ed5",
+      "name": "Get row(s) in sheet"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "datos recuperados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "datos recuperados": {
+      "main": [
+        [
+          {
+            "node": "preparar prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "preparar prompt": {
+      "main": [
+        [
+          {
+            "node": "Gemini genera respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini genera respuesta": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d10e1ffa-8f0b-4f01-92a2-2727e11c0948",
+  "nodeGroups": [],
+  "id": "yc9ctvaG2Y5ohji2",
+  "tags": []
+}
